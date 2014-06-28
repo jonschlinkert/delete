@@ -1,9 +1,9 @@
 # delete [![NPM version](https://badge.fury.io/js/delete.png)](http://badge.fury.io/js/delete)
 
-> Delete files and folders.
+> Delete files and folders and any intermediate directories if they exist (sync and async). 
 
 Also see
-* [del](https://github.com/sindresorhus/del) if you need globbing.
+* [del](https://github.com/sindresorhus/del) if you need globbing. This lib was inspired by **del**, I wanted a quick solution that prevented accidental deletion of files outside the current working directory, but for individual files and without the extra dependencies.
 * [write](https://github.com/jonschlinkert/write) for writing files to disk.
 
 ## Install

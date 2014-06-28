@@ -1,6 +1,6 @@
 {
   "name": "delete",
-  "description": "Delete files and folders.",
+  "description": "Delete files and folders and any intermediate directories if they exist (sync and async).",
   "version": "0.1.4",
   "homepage": "https://github.com/jonschlinkert/delete",
   "author": {
