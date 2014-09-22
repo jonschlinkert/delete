@@ -7,8 +7,8 @@
 
 var fs = require('fs');
 var expect = require('chai').expect;
-var del = require('../');
 var write = require('write');
+var del = require('..');
 
 
 beforeEach(function () {

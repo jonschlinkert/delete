@@ -1,7 +1,7 @@
 {
   "name": "delete",
   "description": "Delete files and folders and any intermediate directories if they exist (sync and async).",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "homepage": "https://github.com/jonschlinkert/delete",
   "author": {
     "name": "Jon Schlinkert",
@@ -38,7 +38,6 @@
     "folder",
     "fs",
     "glob",
-    "gulpfriendly",
     "inside",
     "path",
     "pwd",
