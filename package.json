@@ -14,12 +14,29 @@
   "bugs": {
     "url": "https://github.com/jonschlinkert/delete/issues"
   },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://github.com/jonschlinkert/delete/blob/master/LICENSE-MIT"
-    }
+  "license": {
+    "type": "MIT",
+    "url": "https://github.com/jonschlinkert/delete/blob/master/LICENSE"
+  },
+  "files": [
+    "index.js"
   ],
+  "main": "index.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "rimraf": "^2.2.8"
+  },
+  "devDependencies": {
+    "chai": "~1.9.1",
+    "mkdirp": "^0.5.0",
+    "mocha": "^2.2.1",
+    "should": "^5.2.0"
+  },
   "keywords": [
     "check",
     "clean",
@@ -49,23 +66,5 @@
     "rmrf",
     "trash",
     "unlink"
-  ],
-  "main": "index.js",
-  "engines": {
-    "node": ">=0.10.0"
-  },
-  "scripts": {
-    "test": "mocha -R spec"
-  },
-  "devDependencies": {
-    "chai": "~1.9.1",
-    "mocha": "*",
-    "verb": "~0.2.6",
-    "write": "^0.1.1"
-  },
-  "dependencies": {
-    "is-path-cwd": "^0.1.0",
-    "is-path-in-cwd": "^0.1.1",
-    "rimraf": "^2.2.8"
-  }
+  ]
 }
