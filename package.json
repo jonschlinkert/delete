@@ -1,23 +1,14 @@
 {
   "name": "delete",
   "description": "Delete files and folders and any intermediate directories if they exist (sync and async).",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "homepage": "https://github.com/jonschlinkert/delete",
-  "author": {
-    "name": "Jon Schlinkert",
-    "url": "https://github.com/jonschlinkert"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/jonschlinkert/delete.git"
-  },
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "jonschlinkert/delete",
   "bugs": {
     "url": "https://github.com/jonschlinkert/delete/issues"
   },
-  "license": {
-    "type": "MIT",
-    "url": "https://github.com/jonschlinkert/delete/blob/master/LICENSE"
-  },
+  "license": "MIT",
   "files": [
     "index.js"
   ],
@@ -29,11 +20,11 @@
     "test": "mocha"
   },
   "dependencies": {
+    "bluebird": "^2.9.33",
+    "lazy-cache": "^0.1.0",
     "rimraf": "^2.2.8"
   },
   "devDependencies": {
-    "chai": "~1.9.1",
-    "mkdirp": "^0.5.0",
     "mocha": "^2.2.1",
     "should": "^5.2.0"
   },
@@ -66,5 +57,10 @@
     "rmrf",
     "trash",
     "unlink"
-  ]
+  ],
+  "verb": {
+    "related": {
+      "list": ["write", "write-yaml", "copy", "write-json", "read-data", "glob-fs", "micromatch", "delete", "export-files"]
+    }
+  }
 }
