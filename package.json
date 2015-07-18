@@ -1,7 +1,7 @@
 {
   "name": "delete",
   "description": "Delete files and folders and any intermediate directories if they exist (sync and async).",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "homepage": "https://github.com/jonschlinkert/delete",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "repository": "jonschlinkert/delete",
@@ -10,7 +10,8 @@
   },
   "license": "MIT",
   "files": [
-    "index.js"
+    "index.js",
+    "lib/"
   ],
   "main": "index.js",
   "engines": {
@@ -60,7 +61,17 @@
   ],
   "verb": {
     "related": {
-      "list": ["write", "write-yaml", "copy", "write-json", "read-data", "glob-fs", "micromatch", "delete", "export-files"]
+      "list": [
+        "write",
+        "write-yaml",
+        "copy",
+        "write-json",
+        "read-data",
+        "glob-fs",
+        "micromatch",
+        "delete",
+        "export-files"
+      ]
     }
   }
 }
