@@ -7,52 +7,66 @@
 
 'use strict';
 
-var lazy = require('lazy-cache')(require);
-var rimraf = lazy('rimraf');
-var promise = lazy('bluebird');
+var path = require('path');
 var utils = require('./lib/utils');
 
-function del(fp, options, next) {
+function del(patterns, options, cb) {
   if (typeof options === 'function') {
-    next = options;
+    cb = options;
     options = {};
   }
-  try {
-    assertDirectory(fp, options);
-    return rimraf()(fp, next);
-  } catch(err) {
-    return next(err);
-  }
+
+  var opts = utils.extend({cwd: process.cwd()}, options);
+
+  utils.glob(patterns, opts, function(err, files) {
+    utils.async.each(files, function(file, next) {
+      var fp = path.resolve(opts.cwd, file);
+
+      try {
+        assertDirectory(fp, opts);
+      } catch (err) {
+        next(err);
+        return;
+      }
+      utils.rimraf(fp, next);
+    }, cb);
+  });
 }
 
-
-del.sync = function delSync(fp, options) {
+del.sync = function delSync(patterns, options) {
+  var opts = utils.extend({cwd: process.cwd()}, options);
   try {
-    assertDirectory(fp, options);
-    rimraf().sync(fp);
-    return fp;
+    utils.glob.sync(patterns, opts).forEach(function(file) {
+      var fp = path.resolve(opts.cwd, file);
+      assertDirectory(fp, opts);
+      utils.rimraf.sync(fp);
+    });
   } catch (err) {
     throw err;
   }
 };
 
+del.promise = function delPromise(patterns, options) {
+  var Promise = utils.promise;
+  var opts = utils.extend({cwd: process.cwd()}, options);
 
-del.promise = function delPromise(fp, options) {
-  assertDirectory(fp, options);
-  var Promise = promise();
-
-  return new Promise(function (resolve, reject) {
-    rimraf()(fp, function (err) {
-      if (err) return reject(err);
-      resolve();
+  return utils.glob.promise(patterns, opts)
+    .then(function(files) {
+      files.forEach(function(fp) {
+        del.sync(fp, opts);
+      });
+    })
+    .catch(function(err) {
+      throw err;
     });
-  });
 };
-
 
 function assertDirectory(fp, options) {
   options = options || {};
-  if (options && options.force) return;
+
+  if (options && options.force) {
+    return;
+  }
 
   if (utils.isCurrentDir(fp) === true) {
     throw new Error('Whoooaaa there! If you\'re sure you want to do this, define `options.force` to delete the current working directory.');
