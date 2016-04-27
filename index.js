@@ -7,6 +7,7 @@
 
 'use strict';
 
+var fs = require('fs');
 var path = require('path');
 var utils = require('./lib/utils');
 
@@ -17,19 +18,34 @@ function del(patterns, options, cb) {
   }
 
   var opts = utils.extend({cwd: process.cwd()}, options);
+  var deleted = [];
 
   utils.glob(patterns, opts, function(err, files) {
     utils.async.each(files, function(file, next) {
       var fp = path.resolve(opts.cwd, file);
 
-      try {
-        assertDirectory(fp, opts);
-      } catch (err) {
-        next(err);
-        return;
-      }
-      utils.rimraf(fp, next);
-    }, cb);
+      fs.stat(fp, function(err, stat) {
+        if (err) {
+          next();
+          return;
+        }
+
+        try {
+          assertDirectory(fp, opts);
+        } catch (err) {
+          next(err);
+          return;
+        }
+
+        utils.rimraf(fp, function(err) {
+          if (err) return next(err);
+          deleted.push(fp);
+          next();
+        });
+      });
+    }, function(err) {
+      cb(err, deleted);
+    });
   });
 }
 

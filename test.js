@@ -1,3 +1,5 @@
+'use strict';
+
 /*!
  * delete <https://github.com/jonschlinkert/delete>
  *
@@ -8,9 +10,11 @@
 require('mocha');
 require('should');
 var fs = require('fs');
+var path = require('path');
 var assert = require('assert');
-var del = require('./');
 var Promise = require('bluebird');
+var fileExists = require('fs-exists-sync');
+var del = require('./');
 
 describe('delete:', function() {
   describe('async:', function() {
@@ -27,7 +31,34 @@ describe('delete:', function() {
 
         del('a.txt', function(err) {
           if (err) return cb(err);
-          assert(!fs.existsSync('a.txt'));
+          assert(!fileExists('a.txt'));
+          cb();
+        });
+      });
+    });
+
+    it('should expose array of deleted files in the callback', function(cb) {
+      fs.exists('a.txt', function(exists) {
+        assert(exists);
+
+        del('a.txt', function(err, files) {
+          if (err) return cb(err);
+          assert(!fileExists('a.txt'));
+          assert.equal(files.indexOf(path.resolve('a.txt')), 0);
+          cb();
+        });
+      });
+    });
+
+    it('should not add files that did not exist to the array', function(cb) {
+      fs.exists('a.txt', function(exists) {
+        assert(exists);
+
+        del(['a.txt', 'fosoososo'], function(err, files) {
+          if (err) return cb(err);
+          assert(!fileExists('a.txt'));
+          assert.equal(files.length, 1);
+          assert.equal(files.indexOf(path.resolve('a.txt')), 0);
           cb();
         });
       });
@@ -39,7 +70,7 @@ describe('delete:', function() {
 
         del(['*.txt'], function(err) {
           if (err) return cb(err);
-          assert(!fs.existsSync('a.txt'));
+          assert(!fileExists('a.txt'));
           cb();
         });
       });
@@ -63,18 +94,18 @@ describe('delete:', function() {
   describe('sync:', function() {
     it('should delete files synchronously.', function() {
       fs.writeFileSync('a.txt', 'This is a test.');
-      assert(fs.existsSync('a.txt'));
+      assert(fileExists('a.txt'));
 
       del.sync('a.txt');
-      assert(!fs.existsSync('a.txt'));
+      assert(!fileExists('a.txt'));
     });
 
     it('should delete a glob of files synchronously.', function() {
       fs.writeFileSync('a.txt', 'This is a test.');
-      assert(fs.existsSync('a.txt'));
+      assert(fileExists('a.txt'));
 
       del.sync(['*.txt']);
-      assert(!fs.existsSync('a.txt'));
+      assert(!fileExists('a.txt'));
     });
 
     it('should not delete the current working directory.', function() {
