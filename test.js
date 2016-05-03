@@ -25,7 +25,7 @@ describe('delete:', function() {
       });
     });
 
-    it('should delete files asynchronously.', function(cb) {
+    it('should delete files asynchronously', function(cb) {
       fs.exists('a.txt', function(exists) {
         assert(exists);
 
@@ -64,7 +64,7 @@ describe('delete:', function() {
       });
     });
 
-    it('should delete a glob of files asynchronously.', function(cb) {
+    it('should delete a glob of files asynchronously', function(cb) {
       fs.exists('a.txt', function(exists) {
         assert(exists);
 
@@ -92,7 +92,7 @@ describe('delete:', function() {
   });
 
   describe('sync:', function() {
-    it('should delete files synchronously.', function() {
+    it('should delete files synchronously', function() {
       fs.writeFileSync('a.txt', 'This is a test.');
       assert(fileExists('a.txt'));
 
@@ -100,7 +100,15 @@ describe('delete:', function() {
       assert(!fileExists('a.txt'));
     });
 
-    it('should delete a glob of files synchronously.', function() {
+    it('should use the sync method when no callback is given.', function() {
+      fs.writeFileSync('a.txt', 'This is a test.');
+      assert(fileExists('a.txt'));
+
+      del('a.txt');
+      assert(!fileExists('a.txt'));
+    });
+
+    it('should delete a glob of files synchronously', function() {
       fs.writeFileSync('a.txt', 'This is a test.');
       assert(fileExists('a.txt'));
 
@@ -108,7 +116,7 @@ describe('delete:', function() {
       assert(!fileExists('a.txt'));
     });
 
-    it('should not delete the current working directory.', function() {
+    it('should not delete the current working directory', function() {
       (function() {
         del.sync('.');
       }).should.throw('Whoooaaa there! If you\'re sure you want to do this, define `options.force` to delete the current working directory.');

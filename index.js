@@ -17,6 +17,10 @@ function del(patterns, options, cb) {
     options = {};
   }
 
+  if (typeof cb !== 'function') {
+    return del.sync.apply(del, arguments);
+  }
+
   var opts = utils.extend({cwd: process.cwd()}, options);
   var deleted = [];
 
