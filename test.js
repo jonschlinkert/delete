@@ -8,166 +8,176 @@
  */
 
 require('mocha');
-require('should');
 var fs = require('fs');
 var path = require('path');
 var assert = require('assert');
-var Promise = require('bluebird');
-var fileExists = require('fs-exists-sync');
 var del = require('./');
 
+function writeFixtures(names) {
+  if (typeof names === 'string') names = [names];
+  for (var i = 0; i < names.length; i++) {
+    fs.writeFileSync(names[i], 'fixture');
+  }
+}
+function exists(names) {
+  for (var i = 0; i < names.length; i++) {
+    if (!fs.existsSync(names[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 describe('delete:', function() {
+  afterEach(function() {
+    assert(!exists(['a.txt', 'b.txt', 'c.txt']));
+  });
+
   describe('async:', function() {
-    beforeEach(function(cb) {
-      fs.writeFile('a.txt', 'This is a test.', function(err) {
-        if (err) return cb(err);
+    it('should do nothing when pattern is empty and no cwd is passed', function(cb) {
+      del('', function(err, files) {
+        assert.equal(files.length, 0);
         cb();
       });
     });
 
-    it('should delete files asynchronously', function(cb) {
-      fs.exists('a.txt', function(exists) {
-        assert(exists);
-
-        del('a.txt', function(err) {
-          if (err) return cb(err);
-          assert(!fileExists('a.txt'));
-          cb();
-        });
-      });
-    });
-
-    it('should expose array of deleted files in the callback', function(cb) {
-      fs.exists('a.txt', function(exists) {
-        assert(exists);
-
-        del('a.txt', function(err, files) {
-          if (err) return cb(err);
-          assert(!fileExists('a.txt'));
-          assert.equal(files.indexOf(path.resolve('a.txt')), 0);
-          cb();
-        });
-      });
-    });
-
-    it('should not add files that did not exist to the array', function(cb) {
-      fs.exists('a.txt', function(exists) {
-        assert(exists);
-
-        del(['a.txt', 'fosoososo'], function(err, files) {
-          if (err) return cb(err);
-          assert(!fileExists('a.txt'));
-          assert.equal(files.length, 1);
-          assert.equal(files.indexOf(path.resolve('a.txt')), 0);
-          cb();
-        });
-      });
-    });
-
-    it('should delete a glob of files asynchronously', function(cb) {
-      fs.exists('a.txt', function(exists) {
-        assert(exists);
-
-        del(['*.txt'], function(err) {
-          if (err) return cb(err);
-          assert(!fileExists('a.txt'));
-          cb();
-        });
-      });
-    });
-
     it('should not delete the cwd:', function(cb) {
-      del('.', function(err) {
-        if (err) err.message.should.equal('Whoooaaa there! If you\'re sure you want to do this, define `options.force` to delete the current working directory.');
+      del('.', function(err, files) {
+        assert(err);
+        assert.equal(files.length, 0);
+        assert(/force/.test(err.message));
         cb();
       });
     });
 
     it('should not delete parent directories:', function(cb) {
-      del('../', function(err) {
-        if (err) err.message.should.equal('Yikes!! Take care! `options.force` must be defined to delete files or folders outside the current working directory.');
+      del('../', function(err, files) {
+        assert(err);
+        assert.equal(files.length, 0);
+        assert(/force/.test(err.message));
+        cb();
+      });
+    });
+
+    it('should delete a file', function(cb) {
+      writeFixtures('a.txt');
+      del('a.txt', function(err, files) {
+        assert.ifError(err);
+        assert.equal(files.length, 1);
+        cb();
+      });
+    });
+
+    it('should delete an array of files', function(cb) {
+      writeFixtures(['a.txt', 'b.txt']);
+      assert(exists(['a.txt', 'b.txt']));
+
+      del(['a.txt', 'b.txt'], cb);
+    });
+
+    it('should add deleted files to callback', function(cb) {
+      writeFixtures(['a.txt', 'b.txt']);
+      assert(exists(['a.txt', 'b.txt']));
+
+      del(['a.txt', 'b.txt'], function(err, files) {
+        assert.ifError(err);
+        assert.equal(files[0], path.resolve('a.txt'));
+        assert.equal(files[1], path.resolve('b.txt'));
+        cb();
+      });
+    });
+
+    it('should not add files that did not exist', function(cb) {
+      writeFixtures(['a.txt', 'b.txt']);
+      assert(exists(['a.txt', 'b.txt']));
+
+      del(['a.txt', 'b.txt', 'c.txt'], function(err, files) {
+        assert.ifError(err);
+        assert.equal(files.length, 2);
+        assert.equal(files[0], path.resolve('a.txt'));
+        assert.equal(files[1], path.resolve('b.txt'));
+        cb();
+      });
+    });
+
+    it('should delete a glob of files asynchronously', function(cb) {
+      writeFixtures(['a.txt', 'b.txt', 'c.txt']);
+      assert(exists(['a.txt', 'b.txt', 'c.txt']));
+
+      del(['*.txt'], function(err) {
+        assert.ifError(err);
+        assert(!fs.existsSync('a.txt'));
         cb();
       });
     });
   });
 
   describe('sync:', function() {
-    it('should delete files synchronously', function() {
-      fs.writeFileSync('a.txt', 'This is a test.');
-      assert(fileExists('a.txt'));
-
-      del.sync('a.txt');
-      assert(!fileExists('a.txt'));
+    it('should not delete the current working directory', function() {
+      assert.throws(function() {
+        del.sync('.');
+      });
     });
 
-    it('should use the sync method when no callback is given.', function() {
-      fs.writeFileSync('a.txt', 'This is a test.');
-      assert(fileExists('a.txt'));
+    it('should not delete parent directories', function() {
+      assert.throws(function() {
+        del.sync('../');
+      });
+    });
 
-      del('a.txt');
-      assert(!fileExists('a.txt'));
+    it('should delete files synchronously', function() {
+      writeFixtures(['a.txt']);
+      assert(exists(['a.txt']));
+      del.sync('a.txt');
     });
 
     it('should delete a glob of files synchronously', function() {
-      fs.writeFileSync('a.txt', 'This is a test.');
-      assert(fileExists('a.txt'));
-
+      writeFixtures(['a.txt', 'b.txt', 'c.txt']);
+      assert(exists(['a.txt', 'b.txt', 'c.txt']));
       del.sync(['*.txt']);
-      assert(!fileExists('a.txt'));
     });
 
-    it('should not delete the current working directory', function() {
-      (function() {
-        del.sync('.');
-      }).should.throw('Whoooaaa there! If you\'re sure you want to do this, define `options.force` to delete the current working directory.');
-    });
-
-    it('should not delete parent directories.', function() {
-      (function() {
-        del.sync('../');
-      }).should.throw('Yikes!! Take care! `options.force` must be defined to delete files or folders outside the current working directory.');
+    it('should return an array of deleted files', function() {
+      writeFixtures(['a.txt', 'b.txt', 'c.txt']);
+      assert(exists(['a.txt', 'b.txt', 'c.txt']));
+      var deleted = del.sync(['*.txt']);
+      assert.equal(deleted.length, 3);
     });
   });
 
   describe('promise:', function() {
-    beforeEach(function(cb) {
-      fs.writeFile('a.txt', 'This is a test.', function(err) {
-        if (err) return cb(err);
-        cb();
-      });
+    it('should do nothing when pattern is an empty string', function() {
+      return del('')
+        .then(function(files) {
+          assert.equal(files.length, 0);
+        });
     });
 
-    afterEach(function(cb) {
-      fs.exists('a.txt', function(exists) {
-        assert(!exists);
-        cb();
-      });
+    it('should delete files with `del.promise`', function() {
+      writeFixtures(['a.txt']);
+      assert(exists(['a.txt']));
+      return del.promise('a.txt');
     });
 
-    it('should delete files with `del.promise`.', function(cb) {
-      fs.exists('a.txt', function(exists) {
-        assert(exists);
-        del.promise('a.txt')
-          .then(function() {
-            fs.exists('a.txt', function(exists) {
-              assert(!exists);
-              cb();
-            });
-          });
-      });
+    it('should delete a glob of files with `del.promise`', function() {
+      writeFixtures(['a.txt', 'b.txt', 'c.txt']);
+      assert(exists(['a.txt', 'b.txt', 'c.txt']));
+      return del.promise(['*.txt']);
     });
 
-    it('should delete a glob of files with `del.promise`.', function(cb) {
-      fs.exists('a.txt', function(exists) {
-        assert(exists);
-        del.promise(['*.txt'])
-          .then(function() {
-            fs.exists('a.txt', function(exists) {
-              assert(!exists);
-              cb();
-            });
-          });
-      });
+    it('should return list of deleted files', function() {
+      writeFixtures(['a.txt', 'b.txt', 'c.txt']);
+      assert(exists(['a.txt', 'b.txt', 'c.txt']));
+      return del(['*.txt'])
+        .then(function(files) {
+          assert.equal(files.length, 3);
+        })
+    });
+
+    it('should use the promise method when no callback is given', function() {
+      writeFixtures(['a.txt', 'b.txt', 'c.txt']);
+      assert(exists(['a.txt', 'b.txt', 'c.txt']));
+      return del(['*.txt']);
     });
   });
 });

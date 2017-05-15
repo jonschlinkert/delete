@@ -1,15 +1,18 @@
 /*!
  * delete <https://github.com/jonschlinkert/delete>
  *
- * Copyright (c) 2014-2015, Jon Schlinkert.
- * Licensed under the MIT License.
+ * Copyright (c) 2014-2017, Jon Schlinkert.
+ * Released under the MIT License.
  */
 
 'use strict';
 
 var fs = require('fs');
 var path = require('path');
-var utils = require('./lib/utils');
+var each = require('async-each');
+var extend = require('extend-shallow');
+var rimraf = require('rimraf');
+var glob = require('matched');
 
 function del(patterns, options, cb) {
   if (typeof options === 'function') {
@@ -18,14 +21,24 @@ function del(patterns, options, cb) {
   }
 
   if (typeof cb !== 'function') {
-    return del.sync.apply(del, arguments);
+    return del.promise.apply(del, arguments);
   }
 
-  var opts = utils.extend({cwd: process.cwd()}, options);
+  var opts = extend({cwd: process.cwd()}, options);
   var deleted = [];
 
-  utils.glob(patterns, opts, function(err, files) {
-    utils.async.each(files, function(file, next) {
+  if (patterns === '' && isCurrentDir(opts.cwd)) {
+    cb(null, deleted);
+    return;
+  }
+
+  glob(patterns, opts, function(err, files) {
+    if (err) {
+      cb(err);
+      return;
+    }
+
+    each(files, function(file, next) {
       var fp = path.resolve(opts.cwd, file);
 
       fs.stat(fp, function(err, stat) {
@@ -41,60 +54,86 @@ function del(patterns, options, cb) {
           return;
         }
 
-        utils.rimraf(fp, function(err) {
+        rimraf(fp, function(err) {
           if (err) return next(err);
           deleted.push(fp);
           next();
         });
       });
     }, function(err) {
-      cb(err, deleted);
+      cb(err, deleted.sort());
     });
   });
 }
 
 del.sync = function delSync(patterns, options) {
-  var opts = utils.extend({cwd: process.cwd()}, options);
-  try {
-    utils.glob.sync(patterns, opts).forEach(function(file) {
-      var fp = path.resolve(opts.cwd, file);
-      assertDirectory(fp, opts);
-      utils.rimraf.sync(fp);
-    });
-  } catch (err) {
-    throw err;
+  var opts = extend({cwd: process.cwd()}, options);
+  var deleted = [];
+
+  if (patterns === '' && isCurrentDir(opts.cwd)) {
+    return [];
   }
+
+  glob.sync(patterns, opts).forEach(function(file) {
+    var fp = path.resolve(opts.cwd, file);
+    assertDirectory(fp, opts);
+    rimraf.sync(fp);
+    deleted.push(fp);
+  });
+
+  deleted.sort();
+  return deleted;
 };
 
 del.promise = function delPromise(patterns, options) {
-  var Promise = utils.promise;
-  var opts = utils.extend({cwd: process.cwd()}, options);
+  var opts = extend({cwd: process.cwd()}, options);
+  var deleted = [];
 
-  return utils.glob.promise(patterns, opts)
+  if (patterns === '' && isCurrentDir(opts.cwd)) {
+    return Promise.resolve(deleted);
+  }
+
+  return glob.promise(patterns, opts)
     .then(function(files) {
       files.forEach(function(fp) {
         del.sync(fp, opts);
+        deleted.push(fp);
       });
-    })
-    .catch(function(err) {
-      throw err;
+      return deleted;
     });
 };
 
 function assertDirectory(fp, options) {
-  options = options || {};
-
-  if (options && options.force) {
+  if (options && options.force === true) {
     return;
   }
-
-  if (utils.isCurrentDir(fp) === true) {
-    throw new Error('Whoooaaa there! If you\'re sure you want to do this, define `options.force` to delete the current working directory.');
+  if (isCurrentDir(fp) === true) {
+    throw new Error('CAUTION! to delete the current working directory "options.force" must be set to true');
   }
-
-  if (utils.insideCurrentDir(fp) === false) {
-    throw new Error('Yikes!! Take care! `options.force` must be defined to delete files or folders outside the current working directory.');
+  if (insideCurrentDir(fp) === false) {
+    throw new Error('CAUTION! to delete files or folders outside the current working directory "options.force" must be set to true');
   }
+}
+
+function insideCurrentDir(fp) {
+  var cwd = stripSlash(process.cwd());
+  fp = stripSlash(path.normalize(path.resolve(fp)));
+  if (path.sep === '\\') {
+    cwd = cwd.toLowerCase();
+    fp = fp.toLowerCase();
+  }
+  return fp.slice(0, cwd.length) === cwd;
+}
+
+function stripSlash(fp) {
+  if (fp.slice(-1) === '/') {
+    return fp.slice(0, -1);
+  }
+  return fp;
+}
+
+function isCurrentDir(fp) {
+  return process.cwd() === path.resolve(fp);
 }
 
 /**
