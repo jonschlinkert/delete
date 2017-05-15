@@ -21,18 +21,14 @@
     "test": "mocha"
   },
   "dependencies": {
-    "async": "^1.5.2",
-    "bluebird": "^3.3.5",
+    "async-each": "^1.0.1",
     "extend-shallow": "^2.0.1",
-    "lazy-cache": "^1.0.4",
-    "matched": "^0.4.1",
-    "rimraf": "^2.5.2"
+    "matched": "^0.4.4",
+    "rimraf": "^2.6.1"
   },
   "devDependencies": {
-    "fs-exists-sync": "^0.1.0",
-    "gulp-format-md": "^0.1.9",
-    "mocha": "^2.4.5",
-    "should": "^8.3.1"
+    "gulp-format-md": "^0.1.12",
+    "mocha": "^3.4.1"
   },
   "keywords": [
     "check",
