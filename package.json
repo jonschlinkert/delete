@@ -1,7 +1,7 @@
 {
   "name": "delete",
   "description": "Delete files and folders and any intermediate directories if they exist (sync and async).",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "homepage": "https://github.com/jonschlinkert/delete",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "repository": "jonschlinkert/delete",
