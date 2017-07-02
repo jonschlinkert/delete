@@ -54,7 +54,7 @@ function del(patterns, options, cb) {
           return;
         }
 
-        rimraf(fp, function(err) {
+        rimraf(fp, {disableGlob: true}, function(err) {
           if (err) return next(err);
           deleted.push(fp);
           next();
@@ -77,7 +77,7 @@ del.sync = function delSync(patterns, options) {
   glob.sync(patterns, opts).forEach(function(file) {
     var fp = path.resolve(opts.cwd, file);
     assertDirectory(fp, opts);
-    rimraf.sync(fp);
+    rimraf.sync(fp, {disableGlob: true});
     deleted.push(fp);
   });
 
@@ -95,6 +95,7 @@ del.promise = function delPromise(patterns, options) {
 
   return glob.promise(patterns, opts)
     .then(function(files) {
+      // sync is actually faster than async most of the time
       files.forEach(function(fp) {
         del.sync(fp, opts);
         deleted.push(fp);
